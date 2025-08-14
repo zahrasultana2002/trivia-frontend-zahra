@@ -60,8 +60,14 @@ export default function App() {
     loadQuestion();
   }
 
-  useEffect(() => { loadQuestion(); }, []);
-  useEffect(() => { if (q) loadQuestion({ kind, difficulty }); }, [kind, difficulty]);
+  useEffect(() => {
+    loadQuestion();
+  }, []);
+
+  useEffect(() => {
+    if (q) loadQuestion({ kind, difficulty });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, difficulty]);
 
   const status = useMemo(() => {
     if (loading) return "Loading…";
@@ -70,25 +76,57 @@ export default function App() {
   }, [loading, error]);
 
   return (
-    
-    <main className="max-w-4xl mx-auto p-6">
-      {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+    <main className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-4xl font-bold">Trivia</h1>
+
+      {/* Controls */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <Segmented
+          value={kind}
+          onChange={(v) => setKind(v as Kind)}
+          options={[
+            { value: "boolean", label: "True/False" },
+            { value: "multiple", label: "Multiple choice" },
+          ]}
+        />
+        <Segmented
+          value={difficulty}
+          onChange={(v) => setDifficulty(v as Difficulty)}
+          options={[
+            { value: "easy", label: "Easy" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
+          ]}
+        />
+        <button
+          onClick={() => loadQuestion()}
+          disabled={loading}
+          className="px-4 py-2 rounded-md bg-purple-600 text-white font-semibold"
+        >
+          {loading ? "Loading…" : "New Question"}
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
         <StatCard label="Score" value={correctCount * 10} icon="🏆" />
         <StatCard label="Accuracy" value={`${Math.round((correctCount / askedCount) * 100) || 0}%`} icon="🎯" />
         <StatCard label="Current Streak" value={isCorrect ? 1 : 0} icon="⚡" />
         <StatCard label="Best Streak" value={1} icon="🥇" />
       </div>
 
-      {/* Question progress */}
-      <div className="text-sm text-gray-500 mb-2">
+      {/* Progress */}
+      <div className="text-sm text-gray-500">
         Question {askedCount} of 10 <span className="float-right capitalize">{q?.difficulty}</span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-        <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${(askedCount / 10) * 100}%` }}></div>
+        <div
+          className="bg-purple-500 h-2 rounded-full"
+          style={{ width: `${(askedCount / 10) * 100}%` }}
+        ></div>
       </div>
 
-      {/* Question Card */}
+      {/* Question */}
       {status && <p className="text-red-500">{status}</p>}
       {q && (
         <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -150,29 +188,7 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
     </div>
   );
 }
-/* ---------- tiny styling helpers ---------- */
-function btn() {
-  return {
-    padding: "10px 14px",
-    borderRadius: 12,
-    border: "1px solid #e2e8f0",
-    background: "white",
-    cursor: "pointer",
-    fontWeight: 600,
-  } as const;
-}
-function choiceBtn() {
-  return {
-    width: "100%",
-    textAlign: "left" as const,
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "2px solid #e2e8f0",
-    background: "white",
-    cursor: "pointer",
-    fontSize: 16,
-  };
-}
+
 function overlay() {
   return {
     position: "fixed" as const,
@@ -180,8 +196,10 @@ function overlay() {
     background: "rgba(15, 23, 42, 0.6)",
     display: "grid",
     placeItems: "center",
+    zIndex: 50,
   };
 }
+
 function card() {
   return {
     background: "white",
@@ -192,29 +210,26 @@ function card() {
   };
 }
 
-/** small segmented control */
 function Segmented({
-  value, onChange, options,
+  value,
+  onChange,
+  options,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
 }) {
   return (
-    <div style={{ display: "flex", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+    <div className="flex border border-gray-300 rounded-lg overflow-hidden">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
-            style={{
-              padding: "8px 12px",
-              background: active ? "#111827" : "white",
-              color: active ? "white" : "#111827",
-              border: "none",
-              cursor: "pointer",
-            }}
+            className={`px-4 py-2 font-medium ${
+              active ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+            }`}
           >
             {opt.label}
           </button>
